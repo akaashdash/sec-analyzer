@@ -7,26 +7,40 @@ import re
 import nltk
 nltk.download('punkt')
 from nltk.tokenize import sent_tokenize, word_tokenize
-from transformers import pipeline
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
 
 
-ticker = 'NCR'
+ticker = 'CMG'
 
 
 dl = Downloader()
 dl.get("10-K", ticker, amount=25)
 
 most_recent = None
+df = pd.DataFrame([], columns=['Year', 'Words', 'Sentences'])
 
 edgar_dir = os.path.join(os.getcwd(), 'sec-edgar-filings')
 for ticker_dir in os.listdir(edgar_dir):
     filing_dir = os.path.join(edgar_dir, ticker)
+    if not os.path.isdir(filing_dir):
+        continue
     filing_dir = os.path.join(filing_dir, '10-K')
     for year_dir in os.listdir(filing_dir):
-        year = year_dir.split('-')[1]
+        file_dir = os.path.join(filing_dir, year_dir)
+        if not os.path.isdir(file_dir):
+            continue
+
+        year = int(year_dir.split('-')[1])
+        if year < 24:
+            year += 2000
+        else:
+            year += 1900
 
         with open(os.path.join(file_dir, 'full-submission.txt'), encoding='utf-8') as f:
             text = f.read()
+
         response = text
         response = re.sub(r'(\r\n|\r|\n)', ' ', response) # \r new line in macOS, \n in Unix and \r\n in Windows
         # remove certain text with regex query
@@ -77,18 +91,23 @@ for ticker_dir in os.listdir(edgar_dir):
         ## replace more than one whitespace with single whitespace
         text = re.sub(r'\s+', ' ', text)
 
-        if int(year) == 22:
+        if int(year) == 2022:
             most_recent = text
 
-        print(year)
-        print("----------------------------")
         tokenized_words = word_tokenize(text)
-        print("Number of words: ", len(tokenized_words))
-        print("Sample of words: ", tokenized_words[:10])
+        word_count = len(tokenized_words)
 
         tokenized_sents = sent_tokenize(text)
-        print("Number of sentences: ", len(tokenized_sents))
-        print("Sample of sentences: ", tokenized_sents[100:104])
+        sent_count = len(tokenized_sents)
+
+        df.loc[len(df.index)] = [year, word_count, sent_count] 
+
+df.sort_values('Year', inplace=True)
+fig_words = px.line(df, x=df['Year'], y=df['Words'])
+fig_words.show()
+
+fig_sents = px.line(df, x=df['Year'], y=df['Sentences'])
+fig_sents.show()
 
 if most_recent != None:
     stopwords = set(STOPWORDS)
