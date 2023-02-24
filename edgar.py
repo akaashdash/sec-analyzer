@@ -141,8 +141,50 @@ def parse_all_filings(ticker):
     for i in range(2000, 2023):
         parse_filing(ticker, i)
 
+def create_word_cloud(ticker, year):
+    edgar_dir = os.path.join(os.getcwd(), 'sec-edgar-filings')
+    ticker_dir = os.path.join(edgar_dir, ticker)
+    filing_dir = os.path.join(ticker_dir, '10-K')
+    year_dir = os.path.join(filing_dir, str(year))
+    parsed_file = os.path.join(year_dir, 'parsed.txt')
+    if not os.path.exists(parsed_file):
+        return
+    with open(parsed_file, encoding='utf-8') as f:
+        text = f.read()
+    stopwords = set(STOPWORDS)
+    stopwords.update(["page", "table", 'document'])
+    wordcloud = WordCloud(stopwords=stopwords, background_color="white").generate(text)
+    plt.figure(figsize=(20, 50))
+    plt.imshow(wordcloud, interpolation='bilinear')
+    plt.axis("off")
+    plt.show()
+
+def create_plots(ticker):
+    edgar_dir = os.path.join(os.getcwd(), 'sec-edgar-filings')
+    ticker_dir = os.path.join(edgar_dir, ticker)
+    filing_dir = os.path.join(ticker_dir, '10-K')
+    if not os.path.exists(filing_dir):
+        return
+    dfs = []
+    for subdir in os.listdir(filing_dir):
+        year_dir = os.path.join(filing_dir, subdir)
+        metadata_file = os.path.join(year_dir, 'metadata.csv')
+        if not os.path.exists(metadata_file):
+            continue
+        dfs.append(pd.read_csv(metadata_file))
+    df = pd.concat(dfs)
+
+    df.sort_values('Year', inplace=True)
+    fig_words = px.line(df, x=df['Year'], y=df['Words'])
+    fig_words.show()
+
+    fig_sents = px.line(df, x=df['Year'], y=df['Sentences'])
+    fig_sents.show()
+
 
 if __name__ == '__main__':
-    ticker = 'AAPL'
+    ticker = 'JPM'
     download_all_filings(ticker)
     parse_all_filings(ticker)
+    create_word_cloud(ticker, 2021)
+    create_plots(ticker)
