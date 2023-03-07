@@ -9,9 +9,50 @@ nltk.download('punkt')
 from nltk.tokenize import sent_tokenize, word_tokenize
 import pandas as pd
 import numpy as np
-
 import plotly.express as px
-import plotly.graph_objects as go
+import requests
+import json
+
+
+class CompanyFactory:
+    __url = 'https://www.sec.gov/files/company_tickers.json'
+    __file_name = 'company_tickers.json'
+    __data = None
+
+    def __init__(self) -> None:
+        company_tickers_file = os.path.join(os.getcwd(), self.__file_name)
+        if not os.path.exists(company_tickers_file):
+            self.__download(company_tickers_file)
+        self.__load(company_tickers_file)
+    
+    def __download(self, file):
+        response = requests.get(self.__url)
+        with open(file, 'wb') as f:
+            f.write(response.content)
+
+    def __load(self, file):
+        self.__data = pd.read_json(file, orient='index')
+
+    def from_ticker(self, ticker):
+        mask = self.__data['ticker'].values == ticker
+        result = self.__data[mask]
+        if len(result) < 1:
+            return None
+        return result.values[0]
+    
+    def from_title(self, title):
+        mask = self.__data['title'].values == title
+        result = self.__data[mask]
+        if len(result) < 1:
+            return None
+        return result.values[0]
+    
+    def from_cik(self, cik):
+        mask = self.__data['cik_str'].values == int(cik)
+        result = self.__data[mask]
+        if len(result) < 1:
+            return None
+        return result.values[0]
 
 
 def download_filing(ticker, year):
@@ -36,8 +77,23 @@ def download_filing(ticker, year):
 
 
 def download_all_filings(ticker):
-    for i in range(2000, 2023):
-        download_filing(ticker, i)
+    edgar_dir = os.path.join(os.getcwd(), 'sec-edgar-filings')
+    ticker_dir = os.path.join(edgar_dir, ticker)
+    filing_dir = os.path.join(ticker_dir, '10-K')
+    if os.path.exists(filing_dir):
+        return
+    dl = Downloader()
+    dl.get("10-K", ticker, download_details=False)
+    if not os.path.exists(filing_dir):
+        return
+    for dl_dir in os.listdir(filing_dir):
+        file_dir = os.path.join(filing_dir, dl_dir)
+        if not os.path.isdir(file_dir):
+            continue
+        if not '-' in dl_dir:
+            continue
+        year = int(dl_dir.split('-')[1]) + 2000
+        os.rename(file_dir, os.path.join(filing_dir, str(year)))
 
 
 def clean_filing_submission(text):
@@ -183,8 +239,13 @@ def create_plots(ticker):
 
 
 if __name__ == '__main__':
-    ticker = 'JPM'
-    download_all_filings(ticker)
-    parse_all_filings(ticker)
-    create_word_cloud(ticker, 2021)
-    create_plots(ticker)
+    #ticker = '0000019617'
+    #download_all_filings(ticker)
+    #parse_all_filings(ticker)
+    #create_word_cloud(ticker, 2021)
+    #create_plots(ticker)
+    cik = CompanyFactory()
+    cik_str = cik.from_ticker('AAPL')
+
+    print(cik_str)
+    print(type(cik_str[0]))
