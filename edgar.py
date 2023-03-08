@@ -12,7 +12,55 @@ import numpy as np
 import plotly.express as px
 import requests
 import json
+import multiprocessing
 
+class Filing:
+    def __init__(self) -> None:
+        pass
+
+class Company:
+    __edgar_dir = 'sec-edgar-filings'
+    __filing_type = '10-K'
+    __filings = None
+
+    def __init__(self, cik, ticker, title) -> None:
+        self.cik = cik
+        self.ticker = ticker
+        self.title = title
+        self.__download()
+        self.__load()
+
+    def __download(self):
+        edgar_dir = os.path.join(os.getcwd(), self.__edgar_dir)
+        cik_dir = os.path.join(edgar_dir, str(self.cik))
+        filing_dir = os.path.join(cik_dir, self.__filing_type)
+        if os.path.exists(filing_dir):
+            return
+        dl = Downloader()
+        dl.get(self.__filing_type, str(self.cik), download_details=False)
+        if not os.path.exists(filing_dir):
+            return
+        for dl_dir in os.listdir(filing_dir):
+            file_dir = os.path.join(filing_dir, dl_dir)
+            if not os.path.isdir(file_dir):
+                continue
+            if not '-' in dl_dir:
+                continue
+            year = int(dl_dir.split('-')[1]) + 2000
+            os.rename(file_dir, os.path.join(filing_dir, str(year)))
+        
+    def __load(self):
+        return
+        edgar_dir = os.path.join(os.getcwd(), self.__edgar_dir)
+        cik_dir = os.path.join(edgar_dir, str(self.cik))
+        filing_dir = os.path.join(cik_dir, self.__filing_type)
+        if os.path.exists(filing_dir):
+            return
+
+    def get_filing(self, year):
+        return 
+
+    
 
 class CompanyFactory:
     __url = 'https://www.sec.gov/files/company_tickers.json'
@@ -53,47 +101,6 @@ class CompanyFactory:
         if len(result) < 1:
             return None
         return result.values[0]
-
-
-def download_filing(ticker, year):
-    edgar_dir = os.path.join(os.getcwd(), 'sec-edgar-filings')
-    ticker_dir = os.path.join(edgar_dir, ticker)
-    filing_dir = os.path.join(ticker_dir, '10-K')
-    year_dir = os.path.join(filing_dir, str(year))
-    if os.path.exists(year_dir):
-        return
-    dl = Downloader()
-    dl.get("10-K", ticker, amount=1, download_details=False, after=(str(year) + "-12-01"), before=(str(year + 1) + "-12-01"))
-    if not os.path.exists(filing_dir):
-        return
-    for dl_dir in os.listdir(filing_dir):
-        file_dir = os.path.join(filing_dir, dl_dir)
-        if not os.path.isdir(file_dir):
-            continue
-        if not '-' in dl_dir:
-            continue
-        year = int(dl_dir.split('-')[1]) + 2000
-        os.rename(file_dir, os.path.join(filing_dir, str(year)))
-
-
-def download_all_filings(ticker):
-    edgar_dir = os.path.join(os.getcwd(), 'sec-edgar-filings')
-    ticker_dir = os.path.join(edgar_dir, ticker)
-    filing_dir = os.path.join(ticker_dir, '10-K')
-    if os.path.exists(filing_dir):
-        return
-    dl = Downloader()
-    dl.get("10-K", ticker, download_details=False)
-    if not os.path.exists(filing_dir):
-        return
-    for dl_dir in os.listdir(filing_dir):
-        file_dir = os.path.join(filing_dir, dl_dir)
-        if not os.path.isdir(file_dir):
-            continue
-        if not '-' in dl_dir:
-            continue
-        year = int(dl_dir.split('-')[1]) + 2000
-        os.rename(file_dir, os.path.join(filing_dir, str(year)))
 
 
 def clean_filing_submission(text):
@@ -249,3 +256,4 @@ if __name__ == '__main__':
 
     print(cik_str)
     print(type(cik_str[0]))
+    print(multiprocessing.cpu_count())
