@@ -17,6 +17,7 @@ def index():
 
 @app.route('/company')
 def getCompanyData():
+    ticker, year = request.args.get('ticker'), request.args.get('year')
     return jsonify({"ticker": "PLTR", "year": 2021})
 
 if __name__ == "__main__":

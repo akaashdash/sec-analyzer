@@ -1,16 +1,15 @@
 import './App.css';
 import React, { useState } from "react";
-import { getCompany10K } from './API';
+import { getCompany10K } from './services/API';
 
 function App() {
 
   const [ticker, setTicker] = useState("");
     const [year, setYear] = useState("");
 
-    function handleSearch(event) {
-        console.log(ticker, year);
-        res = getCompany10K(ticker, year)
-        console.log(res);
+    async function handleSearch(event) {
+      event.preventDefault()
+      const res = await getCompany10K(ticker, year)
     }
 
     const fetchVisual = () => {
