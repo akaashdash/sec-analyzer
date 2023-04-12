@@ -5,6 +5,7 @@ import json
 import multiprocessing
 import pandas as pd
 from edgar_parser import process_filing
+from wordcloud import WordCloud, STOPWORDS
 
 class Filing:
     __dir = None
@@ -30,6 +31,21 @@ class Filing:
         if content is not None:
             with open(parsed_file, 'w') as f:
                 json.dump(content, f, indent=4)
+
+    def generate_word_cloud(self):
+        image_file = os.path.join(self.__dir, 'wordcloud.jpg')
+        if os.path.exists(image_file):
+            return image_file
+        parsed_file = os.path.join(self.__dir, 'parsed.json')
+        if not os.path.exists(parsed_file):
+            return
+        with open(parsed_file) as f:
+            data = json.load(f)
+        wordcloud = WordCloud(background_color="white").generate(data["item_1"])
+        image = wordcloud.to_image()
+        image.save(image_file)
+        return image_file
+
 
 class Company:
     __edgar_dir = 'sec-edgar-filings'
@@ -133,4 +149,5 @@ class CompanyFactory:
 
 if __name__ == '__main__':
     cf = CompanyFactory()
-    company = cf.from_ticker('NVDA')
+    company = cf.from_ticker('AAPL')
+    print(company.get_filing(2022).generate_word_cloud())
