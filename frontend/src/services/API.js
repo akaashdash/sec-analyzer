@@ -10,9 +10,10 @@ async function getCompany10K(ticker, year) {
             params: {
                 ticker: ticker,
                 year: year
-            }
+            },
+            responseType: 'blob'
         })
-        console.log(res.data.ticker);
+    // console.log(typeof(res.data));
         return res.data
     } catch (error) {
         return error
