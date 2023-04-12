@@ -132,3 +132,4 @@ dmypy.json
 .DS_Store
 sec-edgar-filings/
 company_tickers.json
+wordclouds/
