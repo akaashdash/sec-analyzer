@@ -6,10 +6,15 @@ import multiprocessing
 import pandas as pd
 from edgar_parser import process_filing
 from wordcloud import WordCloud, STOPWORDS
+import plotly.express as px
+
+# TO FIND DATES FOR A YEAR USE https://data.sec.gov/submissions/CIK0000019617.json
+# REPLACE CIK WITH THE RIGHT CIK AND LOOK FOR fiscalYearEnd (60-90 years)
 
 class Filing:
     __dir = None
     year = None
+    __len = 0
 
     def __init__(self, year_dir) -> None:
         self.__dir = year_dir
@@ -21,14 +26,19 @@ class Filing:
         submission_file = os.path.join(self.__dir, 'full-submission.txt')
         if not os.path.exists(parsed_file):
             self.__parse(parsed_file, submission_file)
+        else:
+            with open(parsed_file, encoding='utf-8') as f:
+                content = json.load(f)
+            for attribute, value in content.items():
+                self.__len += len(value.split())
 
     def __parse(self, parsed_file, submission_file):
         with open(submission_file, encoding='utf-8') as f:
             text = f.read()
-        
         content = process_filing(text)
-
         if content is not None:
+            for attribute, value in content.items():
+                self.__len += len(value.split())
             with open(parsed_file, 'w') as f:
                 json.dump(content, f, indent=4)
 
@@ -45,6 +55,9 @@ class Filing:
         image = wordcloud.to_image()
         image.save(image_file)
         return image_file
+    
+    def get_length(self):
+        return self.__len
 
 
 class Company:
@@ -96,6 +109,7 @@ class Company:
             self.__filings = []
             for result in pool.map(Filing, dirs):
                 self.__filings.append(result)
+        self.plot_words()
 
     def get_filings(self):
         return self.__filings
@@ -105,6 +119,25 @@ class Company:
         if len(query_result) < 1:
             return None
         return query_result[0]
+    
+    def plot_words(self):
+        edgar_dir = os.path.join(os.getcwd(), self.__edgar_dir)
+        cik_dir = os.path.join(edgar_dir, str(self.cik).zfill(10))
+        filing_dir = os.path.join(cik_dir, self.__filing_type)
+        if not os.path.exists(filing_dir):
+            return
+        plot_file = os.path.join(filing_dir, 'wordplot.jpg')
+        if os.path.exists(plot_file):
+            return plot_file
+        data = { "years": [], "words": [] }
+        for filing in self.get_filings():
+            data['years'].append(filing.year)
+            data['words'].append(filing.get_length())
+        df = pd.DataFrame.from_dict(data)
+        df.sort_values('years', inplace=True)
+        fig_words = px.line(df, x=df['years'], y=df['words'])
+        fig_words.write_image(plot_file)
+        return plot_file
 
 
 class CompanyFactory:
@@ -149,5 +182,6 @@ class CompanyFactory:
 
 if __name__ == '__main__':
     cf = CompanyFactory()
-    company = cf.from_ticker('AAPL')
+    company = cf.from_ticker('GOOG')
+    print(company.plot_words())
     print(company.get_filing(2022).generate_word_cloud())
