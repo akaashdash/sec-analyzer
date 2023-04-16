@@ -25,13 +25,13 @@ def getCompanyData():
     ticker, year = request.args.get('ticker'), int(request.args.get('year'))
     if year < 2000 or year > CURR_YEAR:
         return "Invalid Year", 400
-    company = cf.from_ticker(ticker)
+    company = cf.from_ticker(ticker, year=int(year))
     if company is None:
         return "Invalid Ticker", 400
     filing = company.get_filing(int(year))
     if filing is None:
         return "No Filing For Year", 400
-    return send_file(filing.generate_word_cloud(), mimetype='image/gif')
+    return send_file(filing.get_knowledgegraph(), mimetype='image/gif')
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', debug=False, port=os.environ.get('PORT', 80))

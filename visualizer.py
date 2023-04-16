@@ -11,8 +11,11 @@ extractor = Classifier.load('relations')
 splitter = SegtokSentenceSplitter()
 
 def extract_entity_rel(data, file):
-    #sentences = splitter.split(data["item_1"])
-    sentences = Sentence(data["item_1"])
+    text = ""
+    for attribute, value in data.items():
+        text += " " + value
+    sentences = Sentence(text)
+    #sentences = splitter.split(text)
     tagger.predict(sentences)
     extractor.predict(sentences)
     ent_dict = {}
@@ -45,15 +48,17 @@ def generate_wordcloud(data, file):
 
 def generate_knowledgegraph(data, file):
     G = nx.DiGraph()
+    """
     nodes = []
     for key in data['entities'].keys():
         nodes.append((key, data['entities'][key]))
-    #G.add_nodes_from(nodes)
+    G.add_nodes_from(nodes)
+    """
     for key in data['relationships'].keys():
         ents = key.split(' -> ')
         G.add_edge(ents[0], ents[1], label=data['relationships'][key]['label'], score=data['relationships'][key]['score'])
 
-    plt.figure(figsize=(15, 15))
+    plt.figure(figsize=(25, 25))
     df = pd.DataFrame(index=G.nodes(), columns=G.nodes())
     for row, data in nx.shortest_path_length(G):
         for col, dist in data.items():

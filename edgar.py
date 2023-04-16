@@ -1,4 +1,5 @@
 import os
+import shutil
 from sec_edgar_downloader import Downloader
 import requests
 import json
@@ -72,12 +73,16 @@ class Company:
     ticker = None
     title = None
 
-    def __init__(self, cik, ticker, title) -> None:
+    def __init__(self, cik, ticker, title, year=None) -> None:
         self.cik = cik
         self.ticker = ticker
         self.title = title
-        self.__download()
-        self.__load()
+        if year is None:
+            self.__download()
+            self.__load()
+        else:
+            self.__download_year(year)
+            self.__load_year(year)
 
     def __download(self):
         edgar_dir = os.path.join(os.getcwd(), self.__edgar_dir)
@@ -86,7 +91,6 @@ class Company:
         if os.path.exists(filing_dir):
             return
         dl = Downloader()
-        # USE DATES TO GET ONLY SPECIFIC YEAR
         dl.get(self.__filing_type, str(self.cik), download_details=False)
         if not os.path.exists(filing_dir):
             return
@@ -98,6 +102,31 @@ class Company:
                 continue
             year = int(dl_dir.split('-')[1]) + 2000
             os.rename(file_dir, os.path.join(filing_dir, str(year)))
+
+    def __download_year(self, year):
+        edgar_dir = os.path.join(os.getcwd(), self.__edgar_dir)
+        cik_dir = os.path.join(edgar_dir, str(self.cik).zfill(10))
+        filing_dir = os.path.join(cik_dir, self.__filing_type)
+        year_dir = os.path.join(filing_dir, str(year))
+        # USE DATES TO GET ONLY SPECIFIC YEAR
+        if os.path.exists(year_dir):
+            return
+        dl = Downloader()
+        dl.get(self.__filing_type, str(self.cik), download_details=False, after=(str(year)+"-01-01"), before=(str(year + 1)+"-12-31"))
+        if not os.path.exists(filing_dir):
+            return
+        for dl_dir in os.listdir(filing_dir):
+            file_dir = os.path.join(filing_dir, dl_dir)
+            if not os.path.isdir(file_dir):
+                continue
+            if not '-' in dl_dir:
+                continue
+            year = int(dl_dir.split('-')[1]) + 2000
+            year_dir = os.path.join(filing_dir, str(year))
+            if not os.path.exists(year_dir):
+                os.rename(file_dir, year_dir)
+            else:
+                shutil.rmtree(file_dir)
         
     def __load(self):
         edgar_dir = os.path.join(os.getcwd(), self.__edgar_dir)
@@ -110,10 +139,21 @@ class Company:
             year_dir = os.path.join(filing_dir, year)
             if os.path.isdir(year_dir):
                 dirs.append(year_dir)
+        self.__filings = []
         with multiprocessing.Pool() as pool:
-            self.__filings = []
             for result in pool.map(Filing, dirs):
                 self.__filings.append(result)
+
+    def __load_year(self, year):
+        edgar_dir = os.path.join(os.getcwd(), self.__edgar_dir)
+        cik_dir = os.path.join(edgar_dir, str(self.cik).zfill(10))
+        filing_dir = os.path.join(cik_dir, self.__filing_type)
+        year_dir = os.path.join(filing_dir, str(year))
+        if not os.path.exists(year_dir):
+            return
+        dirs = []
+        self.__filings = []
+        self.__filings.append(Filing(year_dir))
 
     def get_filings(self):
         return self.__filings
@@ -144,29 +184,30 @@ class CompanyFactory:
     def __load(self, file):
         self.__data = pd.read_json(file, orient='index')
 
-    def from_ticker(self, ticker):
+    def from_ticker(self, ticker, year=None):
         mask = self.__data['ticker'].values == ticker
         result = self.__data[mask]
         if len(result) < 1:
             return None
-        return Company(result.values[0][0], result.values[0][1], result.values[0][2])
+        return Company(result.values[0][0], result.values[0][1], result.values[0][2], year=year)
     
-    def from_title(self, title):
+    def from_title(self, title, year=None):
         mask = self.__data['title'].values == title
         result = self.__data[mask]
         if len(result) < 1:
             return None
-        return Company(result.values[0][0], result.values[0][1], result.values[0][2])
+        return Company(result.values[0][0], result.values[0][1], result.values[0][2], year=year)
     
-    def from_cik(self, cik):
+    def from_cik(self, cik, year=None):
         mask = self.__data['cik_str'].values == int(cik)
         result = self.__data[mask]
         if len(result) < 1:
             return None
-        return Company(result.values[0][0], result.values[0][1], result.values[0][2])
+        return Company(result.values[0][0], result.values[0][1], result.values[0][2], year=year)
 
 if __name__ == '__main__':
     cf = CompanyFactory()
-    company = cf.from_ticker('MSFT')
-    print(company.get_filing(2022).get_wordcloud())
-    print(company.get_filing(2022).get_knowledgegraph())
+    year = 2021
+    company = cf.from_ticker('MSFT', year=year)
+    print(company.get_filing(year).get_wordcloud())
+    print(company.get_filing(year).get_knowledgegraph())
