@@ -16,7 +16,7 @@ regex_flags = re.IGNORECASE | re.DOTALL | re.MULTILINE
 items_list = ["1", "1A", "1B", "2", "3", "4", "5", "6", "7", "7A", "8", "9", "9A", "9B", "10", "11", "12", "13", "14", "15"]
 
 # This is the list of items we want
-items_to_extract = ["1", "1A", "1B", "2", "3", "4", "5", "6", "7", "7A", "8", "9", "9A", "9B", "10", "11", "12", "13", "14", "15"]
+items_to_extract = ["1", "1A", "1B", "2", "7", "7A", "10"]
 
 class HtmlStripper(HTMLParser):
     """
@@ -81,6 +81,7 @@ def process_filing(content):
         next_item_list = items_list[i+1:]
         item_section, positions = parse_item(text, item_index, next_item_list, positions)
         item_section = remove_multiple_lines(item_section)
+        item_section = remove_escape_chars(item_section)
 
         if item_index in items_to_extract:
             if item_section != '':
@@ -91,6 +92,10 @@ def process_filing(content):
         return None
 
     return json_content
+
+def remove_escape_chars(text):
+    text = re.sub(r'\n', ' ', text)
+    return text
 
 def strip_html(html_content):
     """
