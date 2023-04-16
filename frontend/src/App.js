@@ -1,17 +1,21 @@
 import './App.css';
 import React, { useState } from "react";
-import { getCompany10K } from './services/API';
+import { getCompanyVisual } from './services/API';
 
 function App() {
 
   const [ticker, setTicker] = useState("");
   const [year, setYear] = useState("");
-  const [imageSrc, setImageSrc] = useState(null);
+  const [wordcloudSrc, setWordcloudSrc] = useState(null);
+  const [knowledgegraphSrc, setKnowledgegraphSrc] = useState(null);
 
   async function handleSearch(event) {
     event.preventDefault()
-    getCompany10K(ticker, year).then(res => {
-      setImageSrc(URL.createObjectURL(res));
+    getCompanyVisual(ticker, year, "wordcloud").then(res => {
+      setWordcloudSrc(URL.createObjectURL(res));
+    });
+    getCompanyVisual(ticker, year, "knowledgegraph").then(res => {
+      setKnowledgegraphSrc(URL.createObjectURL(res));
     });
   }
 
@@ -25,10 +29,17 @@ function App() {
         <input className="textIn" type="text" id="year" value={year} onChange={(e) => setYear(e.target.value)} required pattern="^[0-9]*$" placeholder="e.g. 2021"/>
         <input className="submit" type="submit" value="Go!" />
       </form>
-      { imageSrc && (
+      { wordcloudSrc && (
         <div className="wordcloud">
-          <h2 className='wordcloudheader'>Word Cloud of {ticker} Annual Report {year}</h2>
-          <img src={imageSrc} alt={`Word cloud of ${ticker} Annual Report ${year}`} />
+          <h2 className='wordcloudHeader'>Word Cloud of {ticker} Annual Report {year}</h2>
+          <img src={wordcloudSrc} alt={`Word cloud of ${ticker} Annual Report ${year}`} />
+        </div>
+      )}
+
+      { knowledgegraphSrc && (
+        <div className="knowledgegraph">
+          <h2 className='knowledgegraphHeader'>Knowledge Graph of {ticker} Annual Report {year}</h2>
+          <img src={knowledgegraphSrc} alt={`KNowledge Graph of ${ticker} Annual Report ${year}`} />
         </div>
       )}
     </div>

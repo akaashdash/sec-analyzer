@@ -4,9 +4,11 @@ const api = axios.create({
   baseURL: "http://localhost:80",
 });
 
-async function getCompany10K(ticker, year) {
+async function getCompanyVisual(ticker, year, visualType) {
+    // visualType is either /wordcloud or /knowledgegraph
+    const endpoint = "/company/" + visualType;
     try {
-        const res = await api.get("/company", {
+        const res = await api.get(endpoint, {
             params: {
                 ticker: ticker,
                 year: year
@@ -20,4 +22,6 @@ async function getCompany10K(ticker, year) {
     }
 }
 
-export { getCompany10K }
+
+
+export { getCompanyVisual }

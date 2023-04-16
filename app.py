@@ -20,8 +20,21 @@ def not_found(e):
     return app.send_static_file('index.html')
     return send_from_directory(app.static_folder, 'index.html')
 
-@app.route('/company')
-def getCompanyData():
+@app.route('/company/wordcloud')
+def getCompanyWordCloud():
+    ticker, year = request.args.get('ticker'), int(request.args.get('year'))
+    if year < 2000 or year > CURR_YEAR:
+        return "Invalid Year", 400
+    company = cf.from_ticker(ticker, year=int(year))
+    if company is None:
+        return "Invalid Ticker", 400
+    filing = company.get_filing(int(year))
+    if filing is None:
+        return "No Filing For Year", 400
+    return send_file(filing.get_wordcloud(), mimetype='image/gif')
+
+@app.route('/company/knowledgegraph')
+def getCompanyKnowledgeGraph():
     ticker, year = request.args.get('ticker'), int(request.args.get('year'))
     if year < 2000 or year > CURR_YEAR:
         return "Invalid Year", 400

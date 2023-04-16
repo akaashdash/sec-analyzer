@@ -52,12 +52,11 @@ label {
 
 .wordcloud {
   margin-top: 20px;
-  margin-bottom: 30px;
   text-align: center;
 }
 
-.wordcloudheader {
-  transform: scale(0.8);
+.wordcloudHeader {
+
 }
 
 h2 {
@@ -65,8 +64,17 @@ h2 {
   margin-bottom: 20px;
 }
 
-img {
+/* img {
   max-width: 100%;
   transform: scale(1.5);
   padding-top: 50px;
+} */
+
+.knowledgegraph {
+  text-align: center;
+  transform: scale(0.5);
+}
+
+.knowledgegraphHeader {
+
 }
