@@ -29,19 +29,21 @@ function App() {
         <input className="textIn" type="text" id="year" value={year} onChange={(e) => setYear(e.target.value)} required pattern="^[0-9]*$" placeholder="e.g. 2021"/>
         <input className="submit" type="submit" value="Go!" />
       </form>
-      { wordcloudSrc && (
-        <div className="wordcloud">
+      { knowledgegraphSrc && (
+        <div className="visualContainer">
+        <div className='wordcloudContainer'>
           <h2 className='wordcloudHeader'>Word Cloud of {ticker} Annual Report {year}</h2>
           <img src={wordcloudSrc} alt={`Word cloud of ${ticker} Annual Report ${year}`} />
         </div>
+        <div className='knowledgegraphContainer'>
+          <h2 className='knowledgegraphHeader'>Knowledge Graph of {ticker} Annual Report {year}</h2>
+          <img src={knowledgegraphSrc} alt={`Knowledge Graph of ${ticker} Annual Report ${year}`} />
+        </div>
+      </div>
+      
       )}
 
-      { knowledgegraphSrc && (
-        <div className="knowledgegraph">
-          <h2 className='knowledgegraphHeader'>Knowledge Graph of {ticker} Annual Report {year}</h2>
-          <img src={knowledgegraphSrc} alt={`KNowledge Graph of ${ticker} Annual Report ${year}`} />
-        </div>
-      )}
+      
     </div>
   );
 }
