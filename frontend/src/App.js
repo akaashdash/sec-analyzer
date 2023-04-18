@@ -1,6 +1,7 @@
 import './App.css';
 import React, { useState } from "react";
 import { getCompanyVisual } from './services/API';
+import { MapInteractionCSS } from 'react-map-interaction';
 
 function App() {
 
@@ -31,19 +32,19 @@ function App() {
       </form>
       { knowledgegraphSrc && (
         <div className="visualContainer">
-        <div className='wordcloudContainer'>
-          <h2 className='wordcloudHeader'>Word Cloud of {ticker} Annual Report {year}</h2>
-          <img src={wordcloudSrc} alt={`Word cloud of ${ticker} Annual Report ${year}`} />
+          <div className='wordcloudContainer'>
+            <h2 className='wordcloudHeader'>Word Cloud of {ticker} Annual Report {year}</h2>
+            <img src={wordcloudSrc} alt={`Word cloud of ${ticker} Annual Report ${year}`} />
+          </div>
+          <div className='knowledgegraphContainer'>
+            <h2 className='knowledgegraphHeader'>Knowledge Graph of {ticker} Annual Report {year}</h2>
+            <MapInteractionCSS>
+              <img src={knowledgegraphSrc} alt={`Knowledge Graph of ${ticker} Annual Report ${year}`} />
+            </MapInteractionCSS>
+            
+          </div>
         </div>
-        <div className='knowledgegraphContainer'>
-          <h2 className='knowledgegraphHeader'>Knowledge Graph of {ticker} Annual Report {year}</h2>
-          <img src={knowledgegraphSrc} alt={`Knowledge Graph of ${ticker} Annual Report ${year}`} />
-        </div>
-      </div>
-      
       )}
-
-      
     </div>
   );
 }

@@ -66,13 +66,20 @@ label {
   margin-bottom: 30px;
 }
 
-.wordcloudContainer,
+.wordcloudContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
 .knowledgegraphContainer {
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
 }
+
 
 h2 {
   font-size: 1.2rem;
