@@ -1,6 +1,8 @@
 import json
 from wordcloud import WordCloud, STOPWORDS
 import networkx as nx
+import matplotlib
+matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import pandas as pd
 from flair.nn import Classifier
